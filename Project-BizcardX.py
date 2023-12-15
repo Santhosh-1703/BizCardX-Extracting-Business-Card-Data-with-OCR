@@ -12,15 +12,15 @@ from sqlalchemy import create_engine,text
 
 #******* Establishing connection with MySQL workbench *********
 # CONNECTING WITH MYSQL DATABASE
-user="root"
-password="1234"
-host="127.0.0.1"
+user="######"
+password="######"
+host="#######"
 database= "project-bizcardx"
 port = "3306"
 
 engine = create_engine("mysql+pymysql://{0}:{1}@{2}:{3}/{4}".format(user, password, host, port, database))
 con = engine.connect()
-
+#Webpage customization
 icon = Image.open("D:\GUVI Class\download (1).png")
 st.set_page_config(page_title='BizCardX: Extracting Business Card Data with OCR',page_icon = icon, layout="wide")
 col1,col2,col3 = st.columns([3,10,3])
@@ -72,7 +72,6 @@ elif selected_page == "About":
             st.markdown("3.    It has option to select category and migrate its data from the database to a MySQL database as Tables.")
             st.markdown("4.    Able to search and edit,modify data from the MySQL database using different SQL Query options, including updating data to details.")
     with tab2:
-                # Create buttons to direct to different website
                 linkedin_button = st.button("LinkedIn")
                 if linkedin_button:
                     st.write("[Redirect to LinkedIn Profile > (https://www.linkedin.com/in/santhosh-r-42220519b/)](https://www.linkedin.com/in/santhosh-r-42220519b/)")
@@ -143,23 +142,19 @@ elif selected_page == "Extract & Preview":
                         # To get DESIGNATION
                         elif index == 1:
                             data["Designation"].append(i)
-
                         # To get WEBSITE_URL
                         if "www " in i.lower() or "www." in i.lower():
                             data["Website"].append(i)
                         elif "WWW" in i:
                             data["Website"].append(res[4] + "." + res[5])
-
                         # To get EMAIL ID
                         elif "@" in i:
                             data["Email"].append(i)
-
                         # To get MOBILE NUMBER
                         elif "-" in i:
                             data["Mobile Number"].append(i)
                         if len(data["Mobile Number"]) == 2:
                             data["Mobile Number"] = " & ".join(data["Mobile Number"])
-
                         # To get COMPANY NAME
                         elif index == len(res) - 1:
                             data["Company"].append(i)
@@ -171,13 +166,11 @@ elif selected_page == "Extract & Preview":
                                 data["Company"][0] = (f'{res[-2]} ' + res[-1])
                             elif len(data["Company"][0]) <= 10:
                                 data["Company"][0] = (f'{res[-3]} ' + res[-1])
-
                         # To get AREA
                         if re.findall('^[0-9].+, [a-zA-Z]+', i):
                             data["Area"].append((i.split(',')[0]))
                         elif re.findall('[0-9] [a-zA-Z]+', i):
                             data["Area"].append(i + 'St')
-
                         # To get CITY NAME
                         match1 = re.findall('.+St , ([a-zA-Z]+).+', i)
                         match2 = re.findall('.+St,, ([a-zA-Z]+).+', i)
@@ -188,7 +181,6 @@ elif selected_page == "Extract & Preview":
                             data["City"].append(match2[0])
                         elif match3:
                             data["City"].append(match3[0])
-
                         # To get STATE
                         state_match = re.findall('[a-zA-Z]{9} +[0-9]', i)
                         if state_match:
@@ -203,6 +195,7 @@ elif selected_page == "Extract & Preview":
                         elif re.findall('[a-zA-Z]{9} +[0-9]', i):
                             data["Pincode"].append(i[10:])
                 get_data(result)
+                
                 df = pd.DataFrame(data)
                 desired_columns = ["Name", "Designation","Company","Primary Mobile Number", "Secondary Mobile Number", "Email", "Website", "Area", "City", "State","Pincode"]
                 df = pd.DataFrame(data, columns=["Company", "Name", "Designation", "Mobile Number", "Email", "Website", "Area", "City", "State", "Pincode"])
@@ -213,12 +206,11 @@ elif selected_page == "Extract & Preview":
                 df.index = df.index+1
                 df = pd.DataFrame(df)
                 st.write(df.T)
+                
                 existing_names_query = f"SELECT Name FROM business_card WHERE Name IN ({', '.join(['%s']*len(df['Name']))})"
                 existing_names = pd.read_sql_query(existing_names_query, con=engine, params=tuple(df['Name']))
-                # Filter the data to only include rows where the 'Name' does not already exist
                 df_to_append = df[~df['Name'].isin(existing_names['Name'])]
                 if not df_to_append.empty:
-                    # Append new data to the SQL table
                     df_to_append.to_sql("business_card", con=engine, if_exists='append', index=False)
                     st.success('Data Migrated Successfully')
                 else:
@@ -230,8 +222,7 @@ elif selected_page == "Modify / Delete":
         col1,col2 = st.columns([4,4])
         query = "SELECT DISTINCT NAME, DESIGNATION FROM BUSINESS_CARD"
         result = pd.read_sql_query(query, con=con)
-
-        # Extract names and designations from the result
+        
         names = ["Select"] + result["NAME"].tolist()
         designation = ["Select"] + result["DESIGNATION"].tolist()
 
@@ -252,7 +243,6 @@ elif selected_page == "Modify / Delete":
             info = result.fetchone()
 
             if info:
-                # Display input fields with existing data
                 mn1 = st.text_input('Name:', info[0])
                 md1 = st.text_input('Designation:', info[1])
                 mc1 = st.text_input('Company:', info[2])
@@ -268,37 +258,23 @@ elif selected_page == "Modify / Delete":
                 update_data = st.button("Update Data")
                 if update_data:
                     val_update = {
-                            'new_name': mn1,
-                            'new_designation': md1,
-                            'new_company': mc1,
-                            'new_primary_mobile': mp1,
-                            'new_secondary_mobile': ms1,
-                            'new_email': me1,
-                            'new_website': mw1,
-                            'new_area': ma1,
-                            'new_city': mc11,
-                            'new_state': ms11,
+                            'new_name': mn1, 'new_designation': md1,
+                            'new_company': mc1,'new_primary_mobile': mp1, 'new_secondary_mobile': ms1,
+                            'new_email': me1, 'new_website': mw1,
+                            'new_area': ma1, 'new_city': mc11, 'new_state': ms11,
                             'new_pincode': mp11,
-                            'old_name': name_selected,
-                            'old_designation': designation_selected}
+                            'old_name': name_selected,'old_designation': designation_selected}
 
                     query_update = """
                                         UPDATE business_card 
                                         SET 
                                             Name = :new_name, 
                                             Designation = :new_designation, 
-                                            Company = :new_company,
-                                            `Primary Mobile Number` = :new_primary_mobile,
-                                            `Secondary Mobile Number` = :new_secondary_mobile,
-                                            Email = :new_email, 
-                                            Website = :new_website, 
-                                            Area = :new_area, 
-                                            City = :new_city, 
-                                            State = :new_state, 
-                                            Pincode = :new_pincode
+                                            Company = :new_company, `Primary Mobile Number` = :new_primary_mobile, `Secondary Mobile Number` = :new_secondary_mobile,
+                                            Email = :new_email, Website = :new_website, 
+                                            Area = :new_area, City = :new_city, State = :new_state, Pincode = :new_pincode
                                         WHERE 
-                                            Name = :old_name AND 
-                                            Designation = :old_designation"""
+                                            Name = :old_name AND Designation = :old_designation"""
                     con.execute(text(query_update), val_update)
                     con.commit()
                     st.success('Data updated in MySQL DB', icon="✅")
